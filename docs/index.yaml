@@ -3,7 +3,7 @@ entries:
   statistics-for-strava:
   - apiVersion: v2
     appVersion: latest
-    created: "2025-10-07T13:23:00.444104+02:00"
+    created: "2025-10-07T13:26:39.672065+02:00"
     description: Helm chart for statistics-for-strava
     digest: 9d3cefab2daa4ef186dc92992cffcccce880f5e43b2948efba533f5bab74680d
     name: statistics-for-strava
@@ -13,7 +13,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: latest
-    created: "2025-10-07T13:23:00.443799+02:00"
+    created: "2025-10-07T13:26:39.671666+02:00"
     description: Helm chart for statistics-for-strava
     digest: b9774ce83cfe76e769e29068ba89bbcfeefd39b3d1e76323e45ff59c7a842501
     name: statistics-for-strava
@@ -23,7 +23,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: latest
-    created: "2025-10-07T13:23:00.443311+02:00"
+    created: "2025-10-07T13:26:39.671237+02:00"
     description: Helm chart for statistics-for-strava
     digest: 23bb1525c10800ef0671f1d39c0d0a9514c2c783714b4ea057ce81fcbd1ef1dc
     name: statistics-for-strava
@@ -31,4 +31,4 @@ entries:
     urls:
     - https://NastyyNas.github.io/statistics-for-strava-chart/statistics-for-strava-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-07T13:23:00.442575+02:00"
+generated: "2025-10-07T13:26:39.670408+02:00"
