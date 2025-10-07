@@ -91,3 +91,8 @@ appConfig:
       activitiesToSkipDuringImport: {}
       skipActivitiesRecordedBefore: "2018-01-01"
       numberOfNewActivitiesToProcessPerImport: 200
+
+postInstall:
+  importAndBuild:
+    enabled: true
+    waitSeconds: 20   # small buffer so the app is up and DB/cache are ready

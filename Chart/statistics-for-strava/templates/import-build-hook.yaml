@@ -1,0 +1,83 @@
+{{- if .Values.postInstall.importAndBuild.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "statistics-for-strava.fullname" . }}-import-build
+  labels:
+    app.kubernetes.io/name: {{ include "statistics-for-strava.name" . }}
+    helm.sh/chart: {{ include "statistics-for-strava.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "statistics-for-strava.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: import-and-build
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh","-lc"]
+          args:
+            - |
+              echo "Waiting {{ .Values.postInstall.importAndBuild.waitSeconds }}s for app to settle...";
+              sleep {{ .Values.postInstall.importAndBuild.waitSeconds }};
+              php /var/www/bin/console app:strava:import-data &&
+              php /var/www/bin/console app:strava:build-files
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: "{{ $v }}"
+            {{- end }}
+            - name: STRAVA_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "statistics-for-strava.fullname" . }}-env
+                  key: STRAVA_CLIENT_ID
+            - name: STRAVA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "statistics-for-strava.fullname" . }}-env
+                  key: STRAVA_CLIENT_SECRET
+            - name: STRAVA_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "statistics-for-strava.fullname" . }}-env
+                  key: STRAVA_REFRESH_TOKEN
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "statistics-for-strava.fullname" . }}-env
+                  key: APP_SECRET
+          volumeMounts:
+            # app config (config.yaml)
+            - name: app-config
+              mountPath: /var/www/config/app/config.yaml
+              subPath: config.yaml
+            {{- if .Values.persistence.enabled }}
+            # share cache/var with the app
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              subPath: var
+            # share built HTML so the Deployment can serve it
+            - name: data
+              mountPath: /var/www/public/build
+              subPath: public-build
+            {{- end }}
+      volumes:
+        - name: app-config
+          configMap:
+            name: {{ include "statistics-for-strava.fullname" . }}-config
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "statistics-for-strava.fullname" . }}
+        {{- end }}
+{{- end }}
