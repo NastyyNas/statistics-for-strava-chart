@@ -39,10 +39,10 @@ env:
 
 # These are stored in a Secret (don’t put secrets in plain values)
 secretEnv:
-  STRAVA_CLIENT_ID: "179840"
-  STRAVA_CLIENT_SECRET: "d6791681c61a03c0a1d409a37f9c7b48750086e1"
-  APP_SECRET: "4044f14507454de3588baef68c471db03d020e7b400aa0afdf70994fcb053dc7"           # any random string
-  STRAVA_REFRESH_TOKEN: "8ade7ddf0e7fd7cc202c35ba7a214daada63395b"  # get from Strava API
+  STRAVA_CLIENT_ID: ""
+  STRAVA_CLIENT_SECRET: ""
+  APP_SECRET: ""           # any random string
+  STRAVA_REFRESH_TOKEN: ""  # get from Strava API
 
 # minimal app config (you can keep it empty or add options later)
 appConfig:
