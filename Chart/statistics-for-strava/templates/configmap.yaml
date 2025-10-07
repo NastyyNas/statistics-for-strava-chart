@@ -1,0 +1,13 @@
+{{- if .Values.appConfig.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "statistics-for-strava.fullname" . }}-config
+data:
+  config.yaml: |
+    {{- if kindIs "string" .Values.appConfig.yaml }}
+    {{- .Values.appConfig.yaml | nindent 4 }}
+    {{- else }}
+    {{- toYaml .Values.appConfig.yaml | nindent 4 }}
+    {{- end }}
+{{- end }}

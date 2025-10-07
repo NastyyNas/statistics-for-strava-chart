@@ -1,0 +1,93 @@
+image:
+  repository: robiningelbrecht/strava-statistics
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8090
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: strava.localhost
+      path: /
+  tls: []   # e.g. [{ hosts: ["strava.example.com"], secretName: strava-tls }]
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Persist app data/cache (adjust path if needed by the app)
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: ""   # "" = default SC (on k3d usually 'local-path')
+  mountPath: /var/www/var
+
+# ---- required app env (populate via --set or editing here) ----
+env:
+  APP_ENV: "prod"
+  # If serving on custom domain, set these:
+  PROXY_HOST: "http://strava.localhost"
+  PROXY_PORT: "8090"
+  TZ: "Europe/Brussels"
+
+# These are stored in a Secret (don’t put secrets in plain values)
+secretEnv:
+  STRAVA_CLIENT_ID: "179840"
+  STRAVA_CLIENT_SECRET: "d6791681c61a03c0a1d409a37f9c7b48750086e1"
+  APP_SECRET: "4044f14507454de3588baef68c471db03d020e7b400aa0afdf70994fcb053dc7"           # any random string
+  STRAVA_REFRESH_TOKEN: "8ade7ddf0e7fd7cc202c35ba7a214daada63395b"  # get from Strava API
+
+# minimal app config (you can keep it empty or add options later)
+appConfig:
+  enabled: true
+  yaml:
+    general:
+      appUrl: "http://strava.localhost"
+      timezone: "Europe/Brussels"
+      ntfyUrl: ""
+      athlete:
+        # (optional but recommended) used for HR calc defaults
+        birthday: "1990-01-01"
+        # REQUIRED: choose one of these formulas (common ones: fox, tanaka, gellish, astrand, arena, nes)
+        # "fox" = 220 - age (Strava’s default style)
+        maxHeartRateFormula: "fox"
+        # REQUIRED by the importer: date→weight map (kg if metric)
+        weightHistory:
+          "2024-01-01": 68.0
+        
+        ftpHistory:
+          "2024-01-01": 250 
+
+      profilePictureUrl: "https://d2eehagpk5cl65.cloudfront.net/img/q60/uploads/assets/mc/bburch/2017_12/ReviewsBojackInside.jpg"
+ 
+    zwift:
+      level: 20            # ← add this (integer from your Zwift profile)
+      racingScore: 700
+    appearance:
+      unit_system: metric
+      locale: "en_US"
+      dateFormat:
+        short:  "d-m-y"   # e.g. 06-10-25
+        normal: "d-m-Y"   # e.g. 06-10-2025
+      timeFormat: 12
+    import:
+      sportTypesToImport:
+        - Crossfit
+        - Run
+        - Workout
+        - Walk
+        - Ride
+      activityVisibilitiesToImport:
+        - everyone
+        - followers_only
+        - only_me
+      activitiesToSkipDuringImport: {}
+      skipActivitiesRecordedBefore: "2018-01-01"
+      numberOfNewActivitiesToProcessPerImport: 200
