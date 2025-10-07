@@ -1,0 +1,64 @@
+{{- $pi := .Values.postInstall | default dict -}}
+{{- $iab := $pi.importAndBuild | default dict -}}
+{{- if $iab.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "statistics-for-strava.fullname" . }}-import-build
+  annotations:
+    # Argo CD hook annotations (NOT Helm hooks)
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    # ensure this runs after the Deployment (which has default wave 0)
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: import-and-build
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh","-lc"]
+          args:
+            - |
+              echo "Waiting {{ default 20 $iab.waitSeconds }}s...";
+              sleep {{ default 20 $iab.waitSeconds }};
+              php /var/www/bin/console app:strava:import-data &&
+              php /var/www/bin/console app:strava:build-files &&
+              echo "✅ Done"
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: "{{ $v }}"
+            {{- end }}
+            - name: STRAVA_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: {{ include "statistics-for-strava.fullname" . }}-env, key: STRAVA_CLIENT_ID } }
+            - name: STRAVA_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: {{ include "statistics-for-strava.fullname" . }}-env, key: STRAVA_CLIENT_SECRET } }
+            - name: STRAVA_REFRESH_TOKEN
+              valueFrom: { secretKeyRef: { name: {{ include "statistics-for-strava.fullname" . }}-env, key: STRAVA_REFRESH_TOKEN } }
+            - name: APP_SECRET
+              valueFrom: { secretKeyRef: { name: {{ include "statistics-for-strava.fullname" . }}-env, key: APP_SECRET } }
+          volumeMounts:
+            - name: app-config
+              mountPath: /var/www/config/app/config.yaml
+              subPath: config.yaml
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: data
+              mountPath: /var/www/public/build
+              subPath: public-build
+            {{- end }}
+      volumes:
+        - name: app-config
+          configMap:
+            name: {{ include "statistics-for-strava.fullname" . }}-config
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "statistics-for-strava.fullname" . }}
+        {{- end }}
+{{- end }}
